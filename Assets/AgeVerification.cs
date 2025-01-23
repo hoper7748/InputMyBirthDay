@@ -116,20 +116,34 @@ public class AgeVerification : MonoBehaviour
         ConfirmationDialog.SetActive(dialog == DialogType.ConfirmationDialog);
     }
 
+    // Check if input would create a valid year
+    // Examples:
+    // 1 char:  "1" or "2" is valid (between "1" and current year's first digit)
+    // 2 chars: "19" or "20" is valid (between "19" and current year's first 2 digits) 
+    // 3 chars: "19X" "20X" is valid (between "190" and current year's first 3 digits)
+    private bool IsValidYearInput(string testInput)
+    {
+        int maxYear = DateTime.Now.Year;
+        int minYear = 1900;
+
+        if (!int.TryParse(testInput, out int testYear)) return false;
+
+        // Truncate max/min years to same length as test input
+        string maxYearStr = maxYear.ToString().Substring(0, testInput.Length);
+        string minYearStr = minYear.ToString().Substring(0, testInput.Length);
+        
+        int maxTruncated = int.Parse(maxYearStr);
+        int minTruncated = int.Parse(minYearStr);
+
+        return testYear >= minTruncated && testYear <= maxTruncated;
+    }
+
     // -- Year Dialog Logic -----------------------------------------------------
     private void OnNumberButtonClicked(string digit)
     {
         if (_yearInput.Length >= 4) return; // Already have 4 digits
 
-        // First character must be '1' or '2'
-        if (_yearInput.Length == 0 && (digit != "1" && digit != "2")) return;
-
-        // First two characters must be "19" or "20"
-        if (_yearInput.Length == 1)
-        {
-            string testTwo = _yearInput + digit;
-            if (testTwo != "19" && testTwo != "20") return;
-        }
+        if (!IsValidYearInput(_yearInput + digit)) return;
 
         // Append if all checks pass
         _yearInput += digit;
